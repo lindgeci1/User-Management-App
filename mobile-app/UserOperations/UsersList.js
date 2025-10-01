@@ -1,6 +1,8 @@
+// UserOperations/UsersList.js
 import React, { useEffect, useState } from 'react';
-import { FlatList, Text, View, StyleSheet } from 'react-native';
-import SearchBar from './SearchBar'; // import the new component
+import { FlatList, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
+import SearchBar from './SearchBar';
+import { useNavigation } from '@react-navigation/native';
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', paddingVertical: 20, paddingHorizontal: 15 },
@@ -14,6 +16,7 @@ const styles = StyleSheet.create({
 export default function UsersList() {
   const [users, setUsers] = useState([]);
   const [searchText, setSearchText] = useState('');
+  const navigation = useNavigation();
 
   useEffect(() => {
     fetch('https://jsonplaceholder.typicode.com/users')
@@ -22,45 +25,43 @@ export default function UsersList() {
       .catch((err) => console.error(err));
   }, []);
 
-  // Filter users by searchText (name or email)
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchText.toLowerCase()) ||
       user.email.toLowerCase().includes(searchText.toLowerCase())
   );
 
-// Inside UsersList.js
-return (
-  <View style={styles.container}>
-    {/* Search bar section*/}
-    <View style={{ marginTop: 50 }}>
-      <SearchBar searchText={searchText} setSearchText={setSearchText} />
+  const openDetails = (user) => {
+    navigation.navigate('UserDetails', { user });
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={{ marginTop: 10, marginBottom: 10 }}>
+        <SearchBar searchText={searchText} setSearchText={setSearchText} />
+      </View>
+
+      <View style={styles.headerRow}>
+        <Text style={[styles.headerText, { flex: 2 }]}>Name</Text>
+        <View style={styles.separator} />
+        <Text style={[styles.headerText, { flex: 3 }]}>Email</Text>
+        <View style={styles.separator} />
+        <Text style={[styles.headerText, { flex: 2 }]}>Company</Text>
+      </View>
+
+      <FlatList
+        data={filteredUsers}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.row} onPress={() => openDetails(item)}>
+            <Text style={[styles.cell, { flex: 2 }]}>{item.name}</Text>
+            <View style={styles.separator} />
+            <Text style={[styles.cell, { flex: 3 }]}>{item.email}</Text>
+            <View style={styles.separator} />
+            <Text style={[styles.cell, { flex: 2 }]}>{item.company.name}</Text>
+          </TouchableOpacity>
+        )}
+      />
     </View>
-
-    {/* Header row section*/}
-    <View style={styles.headerRow}>
-      <Text style={[styles.headerText, { flex: 2 }]}>Name</Text>
-      <View style={styles.separator} />
-      <Text style={[styles.headerText, { flex: 3 }]}>Email</Text>
-      <View style={styles.separator} />
-      <Text style={[styles.headerText, { flex: 2 }]}>Company</Text>
-    </View>
-
-    {/* Users list section*/}
-    <FlatList
-      data={filteredUsers}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => (
-        <View style={styles.row}>
-          <Text style={[styles.cell, { flex: 2 }]}>{item.name}</Text>
-          <View style={styles.separator} />
-          <Text style={[styles.cell, { flex: 3 }]}>{item.email}</Text>
-          <View style={styles.separator} />
-          <Text style={[styles.cell, { flex: 2 }]}>{item.company.name}</Text>
-        </View>
-      )}
-    />
-  </View>
-);
-
+  );
 }
